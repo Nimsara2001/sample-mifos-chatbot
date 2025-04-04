@@ -1,36 +1,26 @@
 import asyncio
 import os
 import shutil
-import sys
 import nest_asyncio
 
-from agents import Agent, Runner, gen_trace_id, trace
+from agents import Agent, ModelSettings, Runner, gen_trace_id, trace
 from agents.mcp import MCPServer, MCPServerStdio
 
 from dotenv import load_dotenv
 load_dotenv()
 
 
-
-# ...existing code...
-
-async def run(mcp_server: MCPServer):
+async def run(github_server: MCPServer, atlassian_server: MCPServer):
     try:
         agent = Agent(
-            name="GitHub Agent",
-            instructions="""Use the tools to access github repositories and do your best to answer the questions.""",
-            mcp_servers=[mcp_server],
+            name="GitHub and Atlassian Agent",
+            instructions="""Use the tools to access github repositories and Atlassian Confluence to do your best to answer the questions.""",
+            mcp_servers=[github_server, atlassian_server]
         )
         
         print("Starting agent process..............................................................")
-
-        # List the files it can read
-        # message = "https://github.com/modelcontextprotocol/servers.git list latest 5 issues in this repo"
-        # print(f"Running: {message}")
-        # result = await Runner.run(starting_agent=agent, input=message)
-        # print(result.final_output)
         
-        message = "https://github.com/openMF/web-app.git can you explain this proejct?"
+        message = "list all Mifos documents in atlassian confluence and list all repositories in github"
         print(f"Running: {message}")
         result = await Runner.run(starting_agent=agent, input=message)
         print(result.final_output)
@@ -43,9 +33,6 @@ async def run(mcp_server: MCPServer):
 
 
 async def main():
-    # current_dir = os.path.dirname(os.path.abspath(__file__))
-    # samples_dir = os.path.join(current_dir, "sample_files")
-
     async with MCPServerStdio(
         name="github server via npx",
         params={
@@ -55,14 +42,25 @@ async def main():
                 "@modelcontextprotocol/server-github"
             ],
             "env": {
-                "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+                "GITHUB_PERSONAL_ACCESS_TOKEN": os.getenv('GITHUB_PERSONAL_ACCESS_TOKEN')
             }
         },
-    ) as server:
+    ) as github_server, MCPServerStdio(
+        name="atlassian server via uvx",
+        params={
+            "command": "uvx",
+            "args": [
+                "mcp-atlassian",
+                "--confluence-url=https://mifosforge.jira.com/wiki",
+                "--confluence-username=mihin.nimsara.2001@gmail.com",
+                "--confluence-token=" + os.getenv('CONFLUENCE_API_TOKEN')
+            ]
+        }
+    ) as atlassian_server:
         trace_id = gen_trace_id()
-        with trace(workflow_name="MCP Github Test", trace_id=trace_id):
+        with trace(workflow_name="MCP Github and Atlassian Test", trace_id=trace_id):
             print(f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}\n")
-            await run(server)
+            await run(github_server, atlassian_server)
 
 
 if __name__ == "__main__":
@@ -74,4 +72,3 @@ if __name__ == "__main__":
     nest_asyncio.apply()
     
     asyncio.run(main())
-    

@@ -5,9 +5,21 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "fastapi>=0.115.12",
-    "mcp>=1.6.0",
-    "nest-asyncio>=1.6.0",
-    "openai-agents>=0.0.8",
-    "python-dotenv>=1.1.0",
+    "nest-asyncio",
+    "openai-agents",
+    "mcp",
+    "python-dotenv",
+    "langchain",
+    "langchain-openai",
+    "langchain-community",
+    "langchain-text-splitters",
+    "langchain-huggingface",
+    "langchain-chroma",
+    "streamlit",
+    "chromadb",
+    "sentence-transformers",
+    "python-dotenv",
+    "unstructured[md]",
+    "accelerate"
+
 ]

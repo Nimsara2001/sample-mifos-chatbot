@@ -9,3 +9,9 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+
+chroma_db/
+mifos_confluence_mds/
+mifos_github_mds/
+.idea/

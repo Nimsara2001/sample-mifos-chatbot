@@ -34,38 +34,60 @@ class MultipleCollectionRetriever(BaseRetriever):
     vectorstores: List[Chroma]
     search_type: str = "similarity"
     search_kwargs: dict = {"k": 5}  # Number of docs to fetch from EACH collection
+    
+    def _score_relevance(self, doc: Document, query: str) -> float:
+        """
+        Score document relevance based on semantic similarity and other heuristics.
+        """
+        # Add basic relevance scoring - can be expanded with more sophisticated metrics
+        score = 0.0
+        
+        # Check if query terms appear in the document
+        query_terms = set(query.lower().split())
+        content_terms = set(doc.page_content.lower().split())
+        term_overlap = len(query_terms.intersection(content_terms)) / len(query_terms)
+        score += term_overlap * 0.5  # Weight term overlap at 50%
+        
+        # Use metadata score if available (from ChromaDB similarity search)
+        if hasattr(doc, 'metadata') and 'score' in doc.metadata:
+            score += float(doc.metadata['score']) * 0.5  # Weight similarity score at 50%
+            
+        return score
 
     def _get_relevant_documents(
             self, query: str, *, run_manager: CallbackManagerForRetrieverRun
     ) -> List[Document]:
         """
-        Synchronous method to get relevant documents from all vectorstores.
+        Get relevant documents from all vectorstores with improved relevance filtering.
         """
         all_docs = []
         for vs in self.vectorstores:
             try:
-                docs = vs.similarity_search(query, **self.search_kwargs)
-                logging.debug(
-                    f"Retrieved {len(docs)} docs from collection '{vs._collection.name}' for query: '{query[:50]}...'")
-                all_docs.extend(docs)
+                docs = vs.similarity_search_with_score(query, **self.search_kwargs)
+                for doc, score in docs:
+                    doc.metadata['score'] = score  # Store similarity score
+                    doc.metadata['collection'] = vs._collection.name
+                    all_docs.append(doc)
             except Exception as e:
                 logging.error(f"Error searching collection '{vs._collection.name}': {e}")
 
-        # Optional: Add de-duplication logic here if needed, based on content or ID
-        # Simple de-duplication based on page_content:
+        # Score and rank documents
+        scored_docs = [(doc, self._score_relevance(doc, query)) for doc in all_docs]
+        scored_docs.sort(key=lambda x: x[1], reverse=True)  # Sort by relevance score
+
+        # Filter out low-relevance documents
+        min_score_threshold = 0.1  # Adjust this threshold as needed
+        filtered_docs = [doc for doc, score in scored_docs if score > min_score_threshold]
+
+        # De-duplicate based on content
         unique_docs = {}
-        for doc in all_docs:
+        for doc in filtered_docs:
             if doc.page_content not in unique_docs:
                 unique_docs[doc.page_content] = doc
 
         final_docs = list(unique_docs.values())
-        logging.info(f"Combined retriever fetched {len(final_docs)} unique documents.")
+        logging.info(f"Retrieved {len(final_docs)} relevant unique documents after filtering.")
         return final_docs
-
-    # Optional: Implement asynchronous version if needed for async chains
-    # async def _aget_relevant_documents(self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun) -> List[Document]:
-    #     # ... implementation using asyncio.gather ...
-    #     pass
 
 
 # --- RAG Controller Class ---
@@ -138,7 +160,7 @@ class RAGController:
         logging.info("Creating combined retriever for Confluence and GitHub collections.")
         return MultipleCollectionRetriever(
             vectorstores=[self.vectorstore_confluence, self.vectorstore_github],
-            search_kwargs={"k": 3}  # Fetch top 3 from each collection
+            search_kwargs={"k": 5}  # Fetch top 3 from each collection
         )
 
     def _initialize_llm(self) -> ChatOpenAI:
@@ -153,7 +175,7 @@ class RAGController:
                 model="gpt-4o-mini",
                 temperature=0.5,  # Slightly creative but mostly factual
                 openai_api_key=openai_api_key,
-                max_tokens=1000
+                max_tokens=10000,  # Adjust based on expected answer length
             )
         except Exception as e:
             logging.error(f"Failed to initialize OpenAI LLM: {e}")
@@ -172,11 +194,12 @@ class RAGController:
         """Creates the conversational retrieval chain."""
         logging.info("Creating ConversationalRetrievalChain...")
 
-        # Define a custom prompt template to guide the LLM
-        # This template includes placeholders for context, chat history, and the question
         _template = """Given the following conversation and relevant context from Mifos documentation (Confluence and GitHub), answer the question.
-If the question cannot be answered based on the provided context, just say "I cannot answer this question based on the available Mifos documentation." Do not try to make up an answer.
-Be concise and focus on the information relevant to the question. Mention the source filename(s) if relevant documents are found.
+If you find relevant context but are unsure about specific details, try to provide a helpful response based on the context rather than saying "I don't know".
+Be specific about what information you found and what remains uncertain.
+If no relevant context is found at all, then say "I cannot answer this question based on the available Mifos documentation."
+Be concise and focus on the information relevant to the question. 
+If relevant documents are found, cite the source filename(s) to support your answer.
 
 Context:
 {context}
@@ -185,7 +208,8 @@ Chat History:
 {chat_history}
 
 Question: {question}
-Answer:"""
+Answer: """
+
         CONDENSE_QUESTION_PROMPT = PromptTemplate.from_template(_template)
 
         try:
@@ -193,9 +217,9 @@ Answer:"""
                 llm=self.llm,
                 retriever=self.retriever,
                 memory=self.memory,
-                return_source_documents=True,  # Return source docs used
-                # combine_docs_chain_kwargs={"prompt": CONDENSE_QUESTION_PROMPT}, # Use custom prompt
-                verbose=True # Set to True for debugging chain execution
+                return_source_documents=True,
+                combine_docs_chain_kwargs={"prompt": CONDENSE_QUESTION_PROMPT},
+                verbose=True
             )
             logging.info("ConversationalRetrievalChain created.")
             return chain

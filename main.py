@@ -19,8 +19,8 @@ except ImportError as e:
     logging.error("Please ensure data_processor.py exists and all dependencies in requirements.txt are installed.")
     sys.exit(1)
 except Exception as e:
-     logging.error(f"An unexpected error occurred during import: {e}")
-     sys.exit(1)
+    logging.error(f"An unexpected error occurred during import: {e}")
+    sys.exit(1)
 
 
 def run_streamlit():
@@ -38,13 +38,14 @@ def run_streamlit():
 
     try:
         process = subprocess.Popen(command)
-        process.wait() # Wait for streamlit process to exit
+        process.wait()  # Wait for streamlit process to exit
     except KeyboardInterrupt:
         logging.info("Streamlit process interrupted by user.")
-        process.terminate() # Terminate the streamlit process if Ctrl+C is pressed
+        process.terminate()  # Terminate the streamlit process if Ctrl+C is pressed
     except Exception as e:
         logging.error(f"Failed to run Streamlit: {e}")
         sys.exit(1)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Run the Mifos RAG Chat application.")
@@ -64,7 +65,7 @@ def main():
         # Optionally, you could allow starting Streamlit even if processing fails,
         # but the RAGController initialization would likely fail later.
         # For robustness, we exit here if processing fails.
-        sys.exit(1) # Exit if data processing fails critically
+        sys.exit(1)  # Exit if data processing fails critically
 
     # --- Step 2: Run Streamlit App ---
     run_streamlit()

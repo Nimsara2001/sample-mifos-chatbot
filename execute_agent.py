@@ -1,6 +1,6 @@
 import asyncio
 import shutil
-import nest_asyncio
+# import nest_asyncio
 from agents import gen_trace_id, trace
 from dotenv import load_dotenv
 from typing import List
@@ -60,20 +60,22 @@ async def execute_github_agent(queries: List[str]) -> List[str]:
     return results
 
 
-if __name__ == "__main__":
+async def execute_all_agents():
     # Check for npx installation
     if not shutil.which("npx"):
         raise RuntimeError("npx is not installed. Please install it with `npm install -g npx`.")
 
     # Apply nest_asyncio to fix event loop issues
-    nest_asyncio.apply()
+    #nest_asyncio.apply()
 
     # Example usage:
     confluence_queries = ["list all pages related to google summer of code",
-                          "find documentation about fineract api"]
+                         "find documentation about fineract api"]
     github_queries = ["all markdown files related to mifos web",
-                      "find installation instructions for community-app"]
+                     "find installation instructions for community-app"]
 
-    # Run queries (uncomment to execute)
-    asyncio.run(execute_confluence_agent(confluence_queries))
-    asyncio.run(execute_github_agent(github_queries))
+    # Run queries concurrently
+    await asyncio.gather(
+        execute_confluence_agent(confluence_queries),
+        execute_github_agent(github_queries)
+    )

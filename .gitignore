@@ -13,4 +13,5 @@ wheels/
 
 mifos_confluence_mds/
 mifos_github_mds/
+chroma_db/
 .idea/

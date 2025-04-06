@@ -103,7 +103,7 @@ class AgentController:
         if not pages_list:
             raise ValueError("pages_list must be a non-empty list")
 
-        output_dir = "mifos_mds"
+        output_dir = "mifos_confluence_mds"
         os.makedirs(output_dir, exist_ok=True)
 
         params = StdioServerParameters(

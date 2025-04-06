@@ -11,6 +11,6 @@ wheels/
 .env
 
 
-mifos_mds/
+mifos_confluence_mds/
 mifos_github_mds/
 .idea/

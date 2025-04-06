@@ -18,11 +18,11 @@ except Exception as e:
     logging.error("Error initializing RAGController", exc_info=True)
     st.stop()
 
-
 # --- Streamlit Page Configuration ---
 st.set_page_config(page_title="Mifos RAG Chat", layout="wide")
 st.title("📚 Mifos Documentation Chatbot (RAG)")
 st.caption("Ask questions about Mifos based on Confluence and GitHub documentation.")
+
 
 # --- Initialize RAG Controller ---
 # Cache the controller to avoid re-initializing on every interaction
@@ -32,13 +32,15 @@ def get_rag_controller():
         controller = RAGController()
         return controller
     except FileNotFoundError as e:
-        st.error(f"Database Error: {e}. Please run the data processing step first (e.g., `python main.py --reprocess`).")
+        st.error(
+            f"Database Error: {e}. Please run the data processing step first (e.g., `python main.py --reprocess`).")
         logging.error(f"Database Error: {e}")
-        return None # Return None to indicate failure
+        return None  # Return None to indicate failure
     except Exception as e:
         st.error(f"Failed to initialize RAG Controller: {e}")
         logging.error("Error getting RAG controller", exc_info=True)
-        return None # Return None to indicate failure
+        return None  # Return None to indicate failure
+
 
 rag_controller = get_rag_controller()
 
@@ -52,10 +54,9 @@ if "messages" not in st.session_state:
             {"role": "assistant", "content": "Hello! How can I help you with Mifos documentation today?"}
         )
     else:
-         st.session_state.messages.append(
+        st.session_state.messages.append(
             {"role": "assistant", "content": "System initialization failed. Please check logs and prerequisites."}
         )
-
 
 # --- Sidebar ---
 with st.sidebar:
@@ -80,7 +81,6 @@ with st.sidebar:
         """
     )
 
-
 # --- Main Chat Interface ---
 
 # Display existing chat messages
@@ -89,12 +89,11 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
         # Display sources if available (and if it was an assistant message with sources)
         if message["role"] == "assistant" and "sources" in message and message["sources"]:
-             with st.expander("Sources Used", expanded=False):
-                 # Display unique sources
-                 unique_sources = sorted(list(set(message["sources"])))
-                 for source in unique_sources:
-                     st.caption(f"- {source}")
-
+            with st.expander("Sources Used", expanded=False):
+                # Display unique sources
+                unique_sources = sorted(list(set(message["sources"])))
+                for source in unique_sources:
+                    st.caption(f"- {source}")
 
 # Accept user input
 if prompt := st.chat_input("Ask your question about Mifos..."):
@@ -125,7 +124,7 @@ if prompt := st.chat_input("Ask your question about Mifos..."):
                     for doc in source_docs:
                         filename = doc.metadata.get('filename', doc.metadata.get('source', None))
                         if filename:
-                            sources.append(os.path.basename(filename)) # Get only filename
+                            sources.append(os.path.basename(filename))  # Get only filename
 
                 # Display the actual response
                 message_placeholder.markdown(answer)

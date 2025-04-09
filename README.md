@@ -2,6 +2,8 @@
 
 An intelligent chatbot powered by MCP, LangChain, OpenAI Agent SDK and GPT-4o-mini that provides information about Mifos Initiative Applications by searching through Confluence documentation and GitHub repositories.
 
+Link to the demo: [Mifos Chatbot Demo](https://youtu.be/R1zelDSoTMs)
+
 ![Mifos Chatbot Screenshot](static/Screenshot.png)
 
 ## Features

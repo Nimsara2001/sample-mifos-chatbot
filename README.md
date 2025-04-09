@@ -29,8 +29,8 @@ An intelligent chatbot powered by MCP, LangChain, OpenAI Agent SDK and GPT-4o-mi
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/mifos-chatbot.git
-cd mifos-chatbot
+git clone https://github.com/Nimsara2001/sample-mifos-chatbot.git
+cd sample-mifos-chatbot
 ```
 
 2. Create and activate a virtual environment using uv:

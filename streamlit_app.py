@@ -30,7 +30,8 @@ except Exception as e:
 
 # --- Streamlit Page Configuration ---
 st.set_page_config(page_title="Mifos RAG Chat", layout="wide")
-st.title("📚 Mifos Documentation Chatbot (RAG)")
+st.image("static/logo.png", width=100)
+st.title("Mifos Intelligent Documentation Assistant")
 st.caption("Ask questions about Mifos based on Confluence and GitHub documentation.")
 
 
@@ -120,13 +121,13 @@ with st.sidebar:
     st.subheader("Info")
     st.markdown(
         """
-        This chatbot uses Retrieval-Augmented Generation (RAG)
-        to answer questions based on Markdown files from:
-        - `mifos_confluence_mds`
-        - `mifos_github_mds`
+        This chatbot uses Model Context Protocol (MCP) Agents 
+        to retrieve and answer questions using:
+        - Confluence Agent: Fetches Mifos documentation
+        - GitHub Agent: Retrieves repository content
 
-        Embeddings are stored locally in ChromaDB.
-        OpenAI (`gpt-4o-mini`) is used for generation.
+        Retrieved content is processed through RAG and stored in ChromaDB.
+        OpenAI (`gpt-4-mini`) is used for response generation.
         """
     )
 

@@ -69,10 +69,17 @@ async def execute_all_agents():
     #nest_asyncio.apply()
 
     # Example usage:
-    confluence_queries = ["list all pages related to google summer of code",
-                         "find documentation about fineract api"]
-    github_queries = ["all markdown files related to mifos web",
-                     "find installation instructions for community-app"]
+    confluence_queries = ["Google Summer of Code 2025 Ideas",
+                         "find documentation about fineract application",
+                         "find latest documentation about mifos mobile app",
+                            "find latest documentation about mifos web",
+                         ]
+    github_queries = ["all md files instructions for community-app",
+                        "all md files related to mifos mobile",
+                        "all md files related to mifos web app",
+                        "all md files related to mifos",
+                        "all md files related to mifos mobile-client",
+                     ]
 
     # Run queries concurrently
     await asyncio.gather(
